@@ -1,0 +1,27 @@
+# Cached downloads — all re-fetchable, none of it ours to redistribute
+cache/
+
+# Manually downloaded third-party data (NAREIT). Licensed to the downloader,
+# not to this repo.
+manual/*
+!manual/.gitkeep
+
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Exported page (export_html.py) — regenerate rather than commit
+positioning-for-inflation-surprises.html
+
+# Secrets — the FRED API key lives here, never in git
+.env
+.env.local
+
+# Local virtual environment (this folder syncs to iCloud; prefer the scratch kernel)
+.venv/
+
+# Reference PDFs kept alongside the code: the 2022 deck (RESTRICTED) and the
+# third-party papers it drew on. Cited in the notebook, never redistributed.
+*.pdf
+
+.DS_Store

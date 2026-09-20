@@ -1,0 +1,40 @@
+[project]
+name = "inflation-surprises"
+version = "0.1.0"
+description = "Recreation of the 2022 'Positioning for Inflation Surprises' study on public data"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "jxwhat", email = "62111104+jxwhat@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "anywidget>=0.11.0",
+    "ipykernel>=7.3.0",
+    "ipywidgets>=8.1.9",
+    "jinja2>=3.1.6",
+    "jupyterlab>=4.5.2",
+    "kaleido>=1.4.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "plotly>=7.1.0",
+    "requests>=2.34.2",
+    "scipy>=1.18.1",
+    "statsmodels>=0.15.0",
+    "xlrd>=2.0.2",
+    "yfinance>=1.7.0",
+]
+
+# A research project, not a distributable package — the modules sit flat next to
+# the notebook and are imported by it directly.
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "nbconvert>=7.17.1",
+    "pytest>=9.1.1",
+]
