@@ -377,7 +377,13 @@ letter columns are annual averages. `PGDP`/`RGDP` are index *levels*, so a 4-qua
 the ratio of column 5 to column 1. `CPI` columns are annualised quarterly *rates*, so they
 compound.
 
-### 4.6 NAREIT: fingerprint-walled, integrated by hand
+### 4.6 NAREIT: downloaded automatically (was: believed walled, fetched by hand)
+
+🔁 **Corrected 2026-09-24.** The file below answers python-requests (and Node) with any
+User-Agent, default included, and is now fetched like every other source, with `manual/` kept
+only as a fallback. The 2026-09-18 "wall" was curl sending a browser agent — a mismatch between
+agent and client that some edges treat as a bot. Re-tests: 538,112 bytes, identical series to the
+hand-downloaded copy over all 656 months. The original record follows.
 
 - **Page**: `reit.com/data-research/reit-market-data/report/monthly-index-values-returns`.
   (An earlier guess at `/data-research/reit-indexes/…` was wrong and is corrected everywhere.)

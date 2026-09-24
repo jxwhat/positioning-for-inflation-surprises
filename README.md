@@ -45,16 +45,17 @@ is dropped, so a mid-month "month end" never passes as a whole month.
 
 ## The one manual step
 
-The REIT sleeve needs a file that cannot be fetched — reit.com sits behind a JavaScript
-fingerprint wall:
+The REIT sleeve downloads NAREIT's **"Monthly Historical Index Data: 1972 - <year>"**
+(`https://www.reit.com/sites/default/files/returns/MonthlyHistoricalReturns.xls`) automatically,
+like every other source (since 2026-09-24; it was a manual download before, on the mistaken belief
+that reit.com was walled). If that download ever fails, a copy saved by hand is used instead:
 
 1. open <https://www.reit.com/data-research/reit-market-data/report/monthly-index-values-returns>
-2. download **"Monthly Historical Index Data: 1972 - 2026"**
-   (`https://www.reit.com/sites/default/files/returns/MonthlyHistoricalReturns.xls`) — not "Monthly Index Data: 2026", which covers the current year only
+2. download the historical workbook above — not "Monthly Index Data: <year>", the current year only
 3. drop it in `manual/` with `nareit` somewhere in the filename
 
-Until then the notebook runs without REITs and says so. `manual/` is gitignored — the data is
-licensed to whoever downloads it, not to this repo.
+With neither, the notebook runs without REITs and says so. `manual/` and `cache/` are gitignored —
+the data is licensed to whoever downloads it, not to this repo.
 
 ## Licence
 
@@ -87,7 +88,7 @@ offers three horizons; FINDINGS.md §9.2 has each start date. The commodity seri
 equal-weight index through May 2025 and GSG thereafter — a splice that disappears if a live
 equal-weight series turns up.
 
-The REIT sleeve is live but not self-updating: it reads whatever NAREIT workbook is sitting in
-`manual/`, so it goes stale until that file is downloaded again. `sources.nareit_all_equity_return`
-raises rather than guessing if NAREIT changes the layout, and returns `None` — dropping the
-sleeve — if the file is missing entirely.
+The REIT sleeve refreshes with everything else (`publish.py --refresh`), falling back to a
+`manual/` copy if the download fails. `sources.nareit_all_equity_return` raises rather than
+guessing if NAREIT changes the layout, and returns `None` — dropping the sleeve — if neither the
+download nor a manual copy is available.

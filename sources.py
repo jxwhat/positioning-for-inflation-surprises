@@ -352,24 +352,46 @@ def yahoo_monthly_total_return(ticker: str, *, refresh: bool = False) -> pd.Seri
 
 
 # --------------------------------------------------------------------------- #
-# NAREIT — manual download (reit.com is behind a fingerprint wall)
+# NAREIT — downloaded automatically since 2026-09-24; manual/ is the fallback
 # --------------------------------------------------------------------------- #
 
+#: NAREIT's "Monthly Historical Index Data: 1972 - <year>" workbook. NOT
+#: "MonthlyReturns.xls", which is the current year only.
+#:
+#: Downloaded by hand from 2026-09-18 on the belief that reit.com was walled.
+#: Re-tested 2026-09-24 (Mercado DATA-SOURCING.md §4b): the page and this file
+#: answer python-requests with any User-Agent, default included — the earlier
+#: "wall" was curl sending a browser agent. If a challenge page ever comes back,
+#: `_http_get` refuses the HTML body and the manual file below is used instead.
+NAREIT_URL = "https://www.reit.com/sites/default/files/returns/MonthlyHistoricalReturns.xls"
+
 NAREIT_INSTRUCTIONS = f"""\
-REIT data needs one manual download (reit.com blocks automated requests):
+The REIT sleeve downloads NAREIT's workbook automatically ({NAREIT_URL}).
+If that download fails, it falls back to a copy saved by hand:
 
   1. open https://www.reit.com/data-research/reit-market-data/report/monthly-index-values-returns
-  2. take "Monthly Historical Index Data: 1972 - 2026"
-     (https://www.reit.com/sites/default/files/returns/MonthlyHistoricalReturns.xls)
-     — NOT "Monthly Index Data: 2026", which is the current year only
+  2. take "Monthly Historical Index Data: 1972 - <year>" (the URL above)
+     — NOT "Monthly Index Data: <year>", which is the current year only
   3. save it into {MANUAL}/  (any name containing "nareit", .xls or .xlsx)
 
-The direct file URL is walled too — verified 2026-09-18 with a browser User-Agent
-and a matching Referer, both of which still return the 3KB challenge page. It has
-to come from a real browser.
-
-The REIT sleeve is skipped until that file exists; everything else runs.\
+With neither, the REIT sleeve is skipped; everything else runs.\
 """
+
+
+def _nareit_workbook(*, refresh: bool = False) -> Path | None:
+    """The downloaded workbook, else the newest manual copy, else None."""
+    try:
+        return _http_get(NAREIT_URL, "nareit-MonthlyHistoricalReturns.xls", refresh=refresh)
+    except Exception as error:  # network, HTTP error, or a challenge page (HTML)
+        manual = sorted(
+            p for p in MANUAL.glob("*")
+            if "nareit" in p.name.lower() and p.suffix.lower() in {".xls", ".xlsx"}
+        )
+        if manual:
+            print(f"NAREIT download failed ({error}); using {manual[-1].name} from manual/.")
+            return manual[-1]
+        print(f"NAREIT download failed ({error}).\n{NAREIT_INSTRUCTIONS}")
+        return None
 
 
 #: Layout of NAREIT's "Monthly Historical Index Data" workbook, verified against
@@ -381,10 +403,10 @@ NAREIT_SHEET = "Index Data"
 NAREIT_GROUP = "All Equity REITs"
 
 
-def nareit_all_equity_return(*, group: str = NAREIT_GROUP) -> pd.Series | None:
+def nareit_all_equity_return(*, group: str = NAREIT_GROUP, refresh: bool = False) -> pd.Series | None:
     """Monthly total return of the FTSE NAREIT All Equity REITs index.
 
-    Returns ``None`` when the manual file is absent, so the notebook degrades to
+    Returns ``None`` when neither the download nor a manual copy is available, so the notebook degrades to
     "no REIT sleeve" rather than failing. Raises when the file is present but
     does not look like the workbook this was written against — a wrong answer
     here would be indistinguishable from a real result, so it is worth failing
@@ -393,13 +415,9 @@ def nareit_all_equity_return(*, group: str = NAREIT_GROUP) -> pd.Series | None:
     NAREIT publishes the monthly total return directly, in percent, so it is
     read rather than differenced out of the index level.
     """
-    candidates = sorted(
-        p for p in MANUAL.glob("*")
-        if "nareit" in p.name.lower() and p.suffix.lower() in {".xls", ".xlsx"}
-    )
-    if not candidates:
+    path = _nareit_workbook(refresh=refresh)
+    if path is None:
         return None
-    path = candidates[-1]
 
     sheets = pd.ExcelFile(path).sheet_names
     if NAREIT_SHEET not in sheets:
